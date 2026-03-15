@@ -1,0 +1,3 @@
+export const GLASSES_MAX_LINE_WIDTH = 180;
+export const GLASSES_MAX_DISPLAY_LINES = 5;
+export const GLASSES_UNKNOWN_GLYPH_WIDTH = 2;
