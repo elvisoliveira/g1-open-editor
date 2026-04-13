@@ -1,0 +1,137 @@
+:root {
+  --bg: #f5f1e8;
+  --panel: #fffdf8;
+  --border: #d9d0c2;
+  --text: #1f1a14;
+  --muted: #6f6558;
+  --ok: #1f7a47;
+  --error: #b42318;
+  --excess: #fecaca;
+  --editor-font: 15px;
+  --editor-line: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top left, #efe7d6, transparent 30%),
+    linear-gradient(180deg, #f7f3ea, #efe7d8);
+  color: var(--text);
+  font: 16px/1.5 Georgia, serif;
+}
+
+.app {
+  height: 100vh;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.status {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  font-family: ui-monospace, Consolas, monospace;
+  box-shadow: 0 10px 30px rgba(81, 59, 23, 0.08);
+}
+
+.status.ok {
+  color: var(--ok);
+}
+
+.status.error {
+  color: var(--error);
+}
+
+.copy-button {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font: 14px/1 ui-monospace, Consolas, monospace;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(81, 59, 23, 0.08);
+}
+
+.copy-button:hover {
+  background: #f8f3e8;
+}
+
+.editor {
+  flex: 1;
+  min-height: 0;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: 0 20px 60px rgba(81, 59, 23, 0.08);
+}
+
+.cm-editor {
+  height: 100%;
+  font-family: ui-monospace, Consolas, monospace;
+  font-size: var(--editor-font);
+  line-height: var(--editor-line);
+}
+
+.cm-scroller {
+  height: 100%;
+  overflow: auto;
+  font-family: inherit;
+}
+
+.cm-content,
+.cm-gutter,
+.cm-line,
+.cm-gutterElement {
+  font-family: inherit;
+  font-size: var(--editor-font);
+  line-height: var(--editor-line);
+}
+
+.cm-line {
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.cm-gutters {
+  border-right: 1px solid var(--border);
+  background: #f8f3e8;
+  color: var(--muted);
+}
+
+.cm-focused {
+  outline: none;
+}
+
+.cm-editor .cm-content {
+  color: var(--text);
+}
+
+.cm-overflow {
+  background: var(--excess);
+}
+
+.cm-fit-line-1 { background: #dcfce7; }
+.cm-fit-line-2 { background: #dbeafe; }
+.cm-fit-line-3 { background: #fef3c7; }
+.cm-fit-line-4 { background: #fce7f3; }
+.cm-fit-line-5 { background: #e0e7ff; }
