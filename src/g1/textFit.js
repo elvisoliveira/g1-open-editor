@@ -1,4 +1,4 @@
-import fontMetrics from './g1_fonts.json' with { type: 'json' };
+import fontMetrics from '../g1_fonts.json' with { type: 'json' };
 import {
   GLASSES_MAX_DISPLAY_LINES,
   GLASSES_MAX_LINE_WIDTH,
@@ -7,6 +7,16 @@ import {
 
 const glyphWidths = new Map(fontMetrics.glyphs.map(({ char, width }) => [char, width]));
 const whitespaceWidth = glyphWidths.get(' ') ?? GLASSES_UNKNOWN_GLYPH_WIDTH;
+
+const createEmptyAnalysis = () => ({
+  lines: [],
+  lineWidths: [],
+  lineRanges: [],
+  lineCount: 0,
+  maxWidth: 0,
+  unknownChars: new Set(),
+  fits: true
+});
 
 const getGlyphWidth = (char, unknownChars) => {
   const width = glyphWidths.get(char);
@@ -35,18 +45,12 @@ const splitOversizedWord = (word, wordStart, unknownChars) => {
   let fragmentWidth = 0;
   let index = wordStart;
 
-  // A single word wider than the display must be broken at character
-  // boundaries because there is no whitespace opportunity to wrap on.
   for (const char of word) {
     const width = getGlyphWidth(char, unknownChars);
     const nextIndex = index + char.length;
 
     if (fragmentWidth > 0 && fragmentWidth + width > GLASSES_MAX_LINE_WIDTH) {
-      fragments.push({
-        start: fragmentStart,
-        end: index,
-        width: fragmentWidth
-      });
+      fragments.push({ start: fragmentStart, end: index, width: fragmentWidth });
       fragmentStart = index;
       fragmentWidth = 0;
     }
@@ -56,27 +60,26 @@ const splitOversizedWord = (word, wordStart, unknownChars) => {
   }
 
   if (fragmentStart < index) {
-    fragments.push({
-      start: fragmentStart,
-      end: index,
-      width: fragmentWidth
-    });
+    fragments.push({ start: fragmentStart, end: index, width: fragmentWidth });
   }
 
   return fragments;
 };
 
+const appendFragments = (fragments, commitLine) => {
+  const committedFragments = fragments.slice(0, -1);
+  const trailingFragment = fragments.at(-1);
+
+  committedFragments.forEach((fragment) => {
+    commitLine(fragment.start, fragment.end, fragment.width);
+  });
+
+  return trailingFragment;
+};
+
 export const analyzeTextFit = (text) => {
   if (!text.trim()) {
-    return {
-      lines: [],
-      lineWidths: [],
-      lineRanges: [],
-      lineCount: 0,
-      maxWidth: 0,
-      unknownChars: new Set(),
-      fits: true
-    };
+    return createEmptyAnalysis();
   }
 
   const wordPattern = /\S+/gu;
@@ -94,9 +97,21 @@ export const analyzeTextFit = (text) => {
     lineWidths.push(width);
   };
 
-  // The layout matches the G1 display model from the spec:
-  // wrap on whole words when possible, otherwise hard-wrap a single oversized
-  // word by character width, and treat `\n` as an explicit line break.
+  const setCurrentLine = (line) => {
+    currentLineStart = line.start;
+    currentLineEnd = line.end;
+    currentLineWidth = line.width;
+  };
+
+  const beginWord = (word, wordStart, wordEnd, wordWidth) => {
+    if (wordWidth <= GLASSES_MAX_LINE_WIDTH) {
+      setCurrentLine({ start: wordStart, end: wordEnd, width: wordWidth });
+      return;
+    }
+
+    setCurrentLine(appendFragments(splitOversizedWord(word, wordStart, unknownChars), commitLine));
+  };
+
   while ((match = wordPattern.exec(text)) !== null) {
     const word = match[0];
     const wordStart = match.index;
@@ -120,24 +135,7 @@ export const analyzeTextFit = (text) => {
     }
 
     if (currentLineStart === null) {
-      if (wordWidth <= GLASSES_MAX_LINE_WIDTH) {
-        currentLineStart = wordStart;
-        currentLineEnd = wordEnd;
-        currentLineWidth = wordWidth;
-      } else {
-        const fragments = splitOversizedWord(word, wordStart, unknownChars);
-        const committedFragments = fragments.slice(0, -1);
-        const trailingFragment = fragments.at(-1);
-
-        committedFragments.forEach((fragment) => {
-          commitLine(fragment.start, fragment.end, fragment.width);
-        });
-
-        currentLineStart = trailingFragment.start;
-        currentLineEnd = trailingFragment.end;
-        currentLineWidth = trailingFragment.width;
-      }
-
+      beginWord(word, wordStart, wordEnd, wordWidth);
       previousWordEnd = wordEnd;
       continue;
     }
@@ -152,26 +150,7 @@ export const analyzeTextFit = (text) => {
     }
 
     commitLine(currentLineStart, currentLineEnd, currentLineWidth);
-
-    if (wordWidth <= GLASSES_MAX_LINE_WIDTH) {
-      currentLineStart = wordStart;
-      currentLineEnd = wordEnd;
-      currentLineWidth = wordWidth;
-      previousWordEnd = wordEnd;
-      continue;
-    }
-
-    const fragments = splitOversizedWord(word, wordStart, unknownChars);
-    const committedFragments = fragments.slice(0, -1);
-    const trailingFragment = fragments.at(-1);
-
-    committedFragments.forEach((fragment) => {
-      commitLine(fragment.start, fragment.end, fragment.width);
-    });
-
-    currentLineStart = trailingFragment.start;
-    currentLineEnd = trailingFragment.end;
-    currentLineWidth = trailingFragment.width;
+    beginWord(word, wordStart, wordEnd, wordWidth);
     previousWordEnd = wordEnd;
   }
 

@@ -1,4 +1,4 @@
-export const template = {
+export const createTemplate = () => ({
   version: '1.0.0',
   exportDate: new Date().toISOString(),
   presentations: [
@@ -10,4 +10,4 @@ export const template = {
       ]
     }
   ]
-};
+});

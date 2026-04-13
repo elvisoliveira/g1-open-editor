@@ -1,11 +1,7 @@
-import { createEditor } from './createEditor.js';
-import { template } from './template.js';
-import { getValidationResult } from './validation.js';
-
-const setStatus = (element, { ok, message }) => {
-  element.textContent = message;
-  element.className = ok ? 'status ok' : 'status error';
-};
+import { createEditor } from '../editor/createEditor.js';
+import { createTemplate } from '../g1/template.js';
+import { getValidationResult } from '../g1/analyzeDocument.js';
+import { setStatus } from './status.js';
 
 export const startApp = () => {
   const editorRoot = document.getElementById('editor');
@@ -14,8 +10,8 @@ export const startApp = () => {
 
   const view = createEditor({
     parent: editorRoot,
-    doc: JSON.stringify(template, null, 2),
-    onChange: (text) => setStatus(status, getValidationResult(text))
+    doc: JSON.stringify(createTemplate(), null, 2),
+    onChange: (analysis) => setStatus(status, getValidationResult(analysis))
   });
 
   copyButton.addEventListener('click', async () => {
@@ -27,5 +23,5 @@ export const startApp = () => {
     }
   });
 
-  setStatus(status, getValidationResult(view.state.doc.toString()));
+  setStatus(status, getValidationResult(view.analysis));
 };
